@@ -1,0 +1,24 @@
+@use '../../index.scss' as *;
+
+.container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background-color: $bg-input;
+  z-index: 1000;
+}
+
+.bar {
+  height: 100%;
+  transition: width $transition-normal;
+}
+
+.blue {
+  background-color: $accent-blue;
+}
+
+.green {
+  background-color: $accent-green;
+}

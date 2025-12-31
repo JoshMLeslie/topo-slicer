@@ -1,0 +1,17 @@
+@use '../../index.scss' as *;
+
+.container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+}
+
+.mapPane {
+  flex: 1;
+  position: relative;
+}
+
+.profilePane {
+  flex: 1;
+  position: relative;
+}

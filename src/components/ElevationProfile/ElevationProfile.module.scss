@@ -1,0 +1,87 @@
+@use '../../index.scss' as *;
+
+.container {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: $bg-panel;
+}
+
+.content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: $spacing-lg;
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  margin-bottom: $spacing-md;
+}
+
+.icon {
+  color: $accent-green;
+}
+
+.title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: $text-primary;
+}
+
+.refining {
+  font-size: 0.875rem;
+  color: $accent-green;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.error {
+  padding: $spacing-md;
+  background-color: rgba($accent-red, 0.1);
+  border: 1px solid $accent-red;
+  border-radius: $radius-md;
+  color: $accent-red;
+  margin-bottom: $spacing-md;
+}
+
+.chart {
+  flex: 1;
+  min-height: 0;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: $text-muted;
+}
+
+.emptyIcon {
+  margin-bottom: $spacing-md;
+  opacity: 0.5;
+}
+
+.emptyText {
+  font-size: 1.125rem;
+}
+
+.emptyHint {
+  font-size: 0.875rem;
+  margin-top: $spacing-sm;
+}

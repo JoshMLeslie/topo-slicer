@@ -1,0 +1,86 @@
+// ===========================================
+// Design Tokens
+// ===========================================
+
+$bg-dark: #111827;
+$bg-panel: #1f2937;
+$bg-input: #374151;
+
+$accent-blue: #3b82f6;
+$accent-blue-hover: #2563eb;
+$accent-green: #10b981;
+$accent-red: #ef4444;
+$accent-red-hover: #dc2626;
+
+$text-primary: #f3f4f6;
+$text-muted: #9ca3af;
+$border-color: #374151;
+
+$spacing-xs: 0.25rem;
+$spacing-sm: 0.5rem;
+$spacing-md: 1rem;
+$spacing-lg: 1.5rem;
+$spacing-xl: 2rem;
+
+$radius-sm: 0.25rem;
+$radius-md: 0.5rem;
+$radius-lg: 0.75rem;
+
+$transition-fast: 150ms ease;
+$transition-normal: 300ms ease;
+
+// ===========================================
+// CSS Reset
+// ===========================================
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+    'Helvetica Neue', Arial, sans-serif;
+  background-color: $bg-dark;
+  color: $text-primary;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+// ===========================================
+// Base Elements
+// ===========================================
+
+button {
+  font-family: inherit;
+  font-size: inherit;
+  cursor: pointer;
+  border: none;
+  outline: none;
+
+  &:focus-visible {
+    outline: 2px solid $accent-blue;
+    outline-offset: 2px;
+  }
+}
+
+// ===========================================
+// Leaflet overrides
+// ===========================================
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: $bg-dark;
+}
