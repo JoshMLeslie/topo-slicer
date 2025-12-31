@@ -15,6 +15,8 @@ export interface LineCoords {
   end: Coordinate;
 }
 
+export type DrawMethod = 'drag' | 'points';
+
 export interface ElevationDataState {
   data: ElevationPoint[];
   loading: boolean;

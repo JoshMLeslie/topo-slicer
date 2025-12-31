@@ -1,3 +1,4 @@
+@use 'sass:color';
 @use '../../index.scss' as *;
 
 .container {
@@ -11,8 +12,12 @@
   top: $spacing-md;
   right: $spacing-md;
   z-index: 1000;
+}
+
+.buttonGroup {
   display: flex;
-  gap: $spacing-sm;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .button {
@@ -35,6 +40,78 @@
     &:hover {
       background-color: $accent-red-hover;
     }
+  }
+}
+
+.methodToggle {
+  display: flex;
+  background-color: $bg-input;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height $transition-normal, opacity $transition-fast,
+    margin-top $transition-normal;
+  margin-top: 0;
+
+  &.visible {
+    max-height: 50px;
+    opacity: 1;
+    margin-top: $spacing-xs;
+  }
+}
+
+.methodButton {
+  flex: 1;
+  padding: $spacing-sm $spacing-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background-color: transparent;
+  color: $text-muted;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    color: $text-primary;
+  }
+
+  &.selected {
+    background-color: $accent-blue;
+    color: white;
+  }
+}
+
+.pointsActions {
+  display: flex;
+  gap: $spacing-xs;
+  margin-top: $spacing-xs;
+}
+
+.finishButton {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 600;
+  background-color: $accent-green;
+  color: white;
+  transition: background-color $transition-fast;
+
+  &:hover {
+    background-color: color.adjust($accent-green, $lightness: -10%);
+  }
+}
+
+.clearButton {
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $radius-md;
+  font-size: 0.875rem;
+  font-weight: 500;
+  background-color: $bg-input;
+  color: $text-muted;
+  transition: background-color $transition-fast, color $transition-fast;
+
+  &:hover {
+    background-color: $bg-panel;
+    color: $text-primary;
   }
 }
 

@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import type { LineCoords } from '../../types';
+import type { Coordinate } from '../../types';
 import { useElevationData } from '../../hooks/useElevationData';
 import { MapPane } from '../MapPane';
 import { ElevationProfile } from '../ElevationProfile';
@@ -10,8 +10,8 @@ export function TopoSlicer() {
     useElevationData();
 
   const handleLineDrawn = useCallback(
-    (line: LineCoords) => {
-      fetchForLine(line);
+    (points: Coordinate[]) => {
+      fetchForLine(points);
     },
     [fetchForLine]
   );

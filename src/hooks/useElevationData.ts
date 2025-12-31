@@ -1,7 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
-import type { ElevationPoint, LineCoords } from '../types';
+import type { Coordinate, ElevationPoint } from '../types';
 import { fetchElevations, ElevationApiError } from '../utils/api';
-import { interpolatePoints, calculateCumulativeDistances } from '../utils/geo';
+import { interpolatePolyline, calculateCumulativeDistances } from '../utils/geo';
 
 interface UseElevationDataReturn {
   data: ElevationPoint[];
@@ -9,7 +9,7 @@ interface UseElevationDataReturn {
   progress: number;
   error: string | null;
   isRefining: boolean;
-  fetchForLine: (line: LineCoords) => Promise<void>;
+  fetchForLine: (points: Coordinate[]) => Promise<void>;
   reset: () => void;
 }
 
@@ -38,7 +38,9 @@ export function useElevationData(): UseElevationDataReturn {
     setIsRefining(false);
   }, []);
 
-  const fetchForLine = useCallback(async (line: LineCoords) => {
+  const fetchForLine = useCallback(async (points: Coordinate[]) => {
+    if (points.length < 2) return;
+
     // Cancel any in-flight requests
     if (abortControllerRef.current) {
       abortControllerRef.current.abort();
@@ -54,8 +56,8 @@ export function useElevationData(): UseElevationDataReturn {
     setIsRefining(false);
 
     try {
-      // Initial coarse sampling
-      const coords = interpolatePoints(line.start, line.end, INITIAL_SAMPLES);
+      // Initial coarse sampling along the polyline
+      const coords = interpolatePolyline(points, INITIAL_SAMPLES);
       const elevations = await fetchElevations(coords, abortController.signal);
 
       if (isCancelledRef.current) return;

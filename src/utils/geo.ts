@@ -68,3 +68,58 @@ export function calculateCumulativeDistances(coords: Coordinate[]): number[] {
 
   return distances;
 }
+
+/**
+ * Interpolate points along a polyline (multiple segments)
+ * Distributes sample points proportionally across segments based on their length
+ */
+export function interpolatePolyline(
+  vertices: Coordinate[],
+  totalSamples: number
+): Coordinate[] {
+  if (vertices.length < 2) return [...vertices];
+  if (vertices.length === 2) {
+    return interpolatePoints(vertices[0]!, vertices[1]!, totalSamples);
+  }
+
+  // Calculate segment lengths
+  const segmentLengths: number[] = [];
+  let totalLength = 0;
+
+  for (let i = 0; i < vertices.length - 1; i++) {
+    const start = vertices[i]!;
+    const end = vertices[i + 1]!;
+    const length = haversineDistance(start.lat, start.lng, end.lat, end.lng);
+    segmentLengths.push(length);
+    totalLength += length;
+  }
+
+  // Distribute samples proportionally
+  const points: Coordinate[] = [];
+
+  for (let i = 0; i < vertices.length - 1; i++) {
+    const start = vertices[i]!;
+    const end = vertices[i + 1]!;
+    const segmentLength = segmentLengths[i]!;
+
+    // Calculate samples for this segment (proportional to length)
+    const segmentSamples = Math.max(
+      1,
+      Math.round((segmentLength / totalLength) * totalSamples)
+    );
+
+    // Interpolate this segment (skip last point except for final segment)
+    const isLastSegment = i === vertices.length - 2;
+    const segmentPoints = interpolatePoints(start, end, segmentSamples);
+
+    // Add all points except the last (to avoid duplicates), unless last segment
+    const endIdx = isLastSegment ? segmentPoints.length : segmentPoints.length - 1;
+    for (let j = 0; j < endIdx; j++) {
+      // Skip first point if not the first segment (already added from prev)
+      if (j === 0 && i > 0) continue;
+      points.push(segmentPoints[j]!);
+    }
+  }
+
+  return points;
+}

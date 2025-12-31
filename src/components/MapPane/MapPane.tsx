@@ -3,94 +3,171 @@ import {
   MapContainer,
   TileLayer,
   Polyline,
+  CircleMarker,
   useMapEvents,
 } from 'react-leaflet';
-import type { LatLng, LeafletMouseEvent } from 'leaflet';
-import type { LineCoords, Coordinate } from '../../types';
+import type { LeafletMouseEvent } from 'leaflet';
+import type { Coordinate, DrawMethod } from '../../types';
 import { LoadingBar } from '../LoadingBar';
 import styles from './MapPane.module.scss';
 
 interface MapPaneProps {
-  onLineDrawn: (line: LineCoords) => void;
+  onLineDrawn: (points: Coordinate[]) => void;
 }
 
 interface DrawingLayerProps {
   drawMode: boolean;
-  onLineDrawn: (line: LineCoords) => void;
+  drawMethod: DrawMethod;
+  onLineDrawn: (points: Coordinate[]) => void;
   onDrawStart: () => void;
   onDrawEnd: () => void;
-  setTempLine: (line: [Coordinate, Coordinate] | null) => void;
-  setFinalLine: (line: [Coordinate, Coordinate] | null) => void;
+  tempPoints: Coordinate[];
+  setTempPoints: React.Dispatch<React.SetStateAction<Coordinate[]>>;
+  setFinalPoints: (points: Coordinate[]) => void;
 }
 
 function DrawingLayer({
   drawMode,
+  drawMethod,
   onLineDrawn,
   onDrawStart,
   onDrawEnd,
-  setTempLine,
-  setFinalLine,
+  tempPoints,
+  setTempPoints,
+  setFinalPoints,
 }: DrawingLayerProps) {
   const [isDrawing, setIsDrawing] = useState(false);
-  const [startPoint, setStartPoint] = useState<LatLng | null>(null);
+  const [dragStart, setDragStart] = useState<Coordinate | null>(null);
+  const [hoverPoint, setHoverPoint] = useState<Coordinate | null>(null);
 
   const map = useMapEvents({
     mousedown(e: LeafletMouseEvent) {
-      if (!drawMode) return;
+      if (!drawMode || drawMethod !== 'drag') return;
 
       map.dragging.disable();
       setIsDrawing(true);
-      setStartPoint(e.latlng);
-      setTempLine(null);
-      setFinalLine(null);
+      const start = { lat: e.latlng.lat, lng: e.latlng.lng };
+      setDragStart(start);
+      setTempPoints([start]);
+      setFinalPoints([]);
       onDrawStart();
     },
 
     mousemove(e: LeafletMouseEvent) {
-      if (!drawMode || !isDrawing || !startPoint) return;
+      if (!drawMode) return;
 
-      setTempLine([
-        { lat: startPoint.lat, lng: startPoint.lng },
-        { lat: e.latlng.lat, lng: e.latlng.lng },
-      ]);
+      if (drawMethod === 'drag' && isDrawing && dragStart) {
+        setTempPoints([dragStart, { lat: e.latlng.lat, lng: e.latlng.lng }]);
+      } else if (drawMethod === 'points' && tempPoints.length > 0) {
+        setHoverPoint({ lat: e.latlng.lat, lng: e.latlng.lng });
+      }
     },
 
     mouseup(e: LeafletMouseEvent) {
-      if (!drawMode || !isDrawing || !startPoint) return;
+      if (!drawMode || drawMethod !== 'drag' || !isDrawing || !dragStart) return;
 
       map.dragging.enable();
       setIsDrawing(false);
 
-      const line: LineCoords = {
-        start: { lat: startPoint.lat, lng: startPoint.lng },
-        end: { lat: e.latlng.lat, lng: e.latlng.lng },
-      };
+      const points: Coordinate[] = [
+        dragStart,
+        { lat: e.latlng.lat, lng: e.latlng.lng },
+      ];
 
-      setTempLine(null);
-      setFinalLine([line.start, line.end]);
-      setStartPoint(null);
+      setTempPoints([]);
+      setFinalPoints(points);
+      setDragStart(null);
       onDrawEnd();
-      onLineDrawn(line);
+      onLineDrawn(points);
+    },
+
+    click(e: LeafletMouseEvent) {
+      if (!drawMode || drawMethod !== 'points') return;
+
+      const newPoint = { lat: e.latlng.lat, lng: e.latlng.lng };
+
+      if (tempPoints.length === 0) {
+        onDrawStart();
+      }
+
+      setTempPoints((prev) => [...prev, newPoint]);
+      setHoverPoint(null);
+    },
+
+    dblclick(e: LeafletMouseEvent) {
+      if (!drawMode || drawMethod !== 'points' || tempPoints.length < 2) return;
+
+      e.originalEvent.preventDefault();
+      map.doubleClickZoom.disable();
+
+      const finalPoints = [...tempPoints];
+      setTempPoints([]);
+      setFinalPoints(finalPoints);
+      setHoverPoint(null);
+      onDrawEnd();
+      onLineDrawn(finalPoints);
+
+      setTimeout(() => map.doubleClickZoom.enable(), 100);
+    },
+
+    contextmenu(e: LeafletMouseEvent) {
+      if (!drawMode || drawMethod !== 'points' || tempPoints.length < 2) return;
+
+      e.originalEvent.preventDefault();
+
+      const finalPoints = [...tempPoints];
+      setTempPoints([]);
+      setFinalPoints(finalPoints);
+      setHoverPoint(null);
+      onDrawEnd();
+      onLineDrawn(finalPoints);
     },
   });
 
-  // Re-enable dragging when draw mode is turned off
+  // Reset when draw mode or method changes
   useEffect(() => {
     if (!drawMode) {
       map.dragging.enable();
       setIsDrawing(false);
-      setStartPoint(null);
+      setDragStart(null);
+      setTempPoints([]);
+      setHoverPoint(null);
     }
-  }, [drawMode, map]);
+  }, [drawMode, drawMethod, map, setTempPoints]);
 
-  return null;
+  return (
+    <>
+      {/* Show vertices in points mode */}
+      {drawMethod === 'points' &&
+        tempPoints.map((point, i) => (
+          <CircleMarker
+            key={i}
+            center={[point.lat, point.lng]}
+            radius={6}
+            pathOptions={{ color: 'red', fillColor: 'red', fillOpacity: 1 }}
+          />
+        ))}
+
+      {/* Hover preview line in points mode */}
+      {drawMethod === 'points' && tempPoints.length > 0 && hoverPoint && (
+        <Polyline
+          positions={[
+            [tempPoints[tempPoints.length - 1]!.lat, tempPoints[tempPoints.length - 1]!.lng],
+            [hoverPoint.lat, hoverPoint.lng],
+          ]}
+          pathOptions={{ color: 'red', weight: 2, opacity: 0.5, dashArray: '5,5' }}
+        />
+      )}
+    </>
+  );
 }
 
 export function MapPane({ onLineDrawn }: MapPaneProps) {
   const [drawMode, setDrawMode] = useState(false);
+  const [drawMethod, setDrawMethod] = useState<DrawMethod>('drag');
   const [loading, setLoading] = useState(0);
-  const [tempLine, setTempLine] = useState<[Coordinate, Coordinate] | null>(null);
-  const [finalLine, setFinalLine] = useState<[Coordinate, Coordinate] | null>(null);
+  const [tempPoints, setTempPoints] = useState<Coordinate[]>([]);
+  const [finalPoints, setFinalPoints] = useState<Coordinate[]>([]);
 
   const handleDrawStart = useCallback(() => {
     setLoading(30);
@@ -102,7 +179,27 @@ export function MapPane({ onLineDrawn }: MapPaneProps) {
   }, []);
 
   const handleToggleDrawMode = useCallback(() => {
-    setDrawMode((prev) => !prev);
+    setDrawMode((prev) => {
+      if (prev) {
+        // Turning off - clear points
+        setTempPoints([]);
+      }
+      return !prev;
+    });
+  }, []);
+
+  const handleFinishPoints = useCallback(() => {
+    if (tempPoints.length >= 2) {
+      setFinalPoints(tempPoints);
+      onLineDrawn(tempPoints);
+      setTempPoints([]);
+      handleDrawEnd();
+    }
+  }, [tempPoints, onLineDrawn, handleDrawEnd]);
+
+  const handleClearPoints = useCallback(() => {
+    setTempPoints([]);
+    setFinalPoints([]);
   }, []);
 
   return (
@@ -110,13 +207,42 @@ export function MapPane({ onLineDrawn }: MapPaneProps) {
       <LoadingBar progress={loading} color="blue" />
 
       <div className={styles.controls}>
-        <button
-          onClick={handleToggleDrawMode}
-          className={`${styles.button} ${drawMode ? styles.active : ''}`}
-          aria-pressed={drawMode}
-        >
-          {drawMode ? 'Drawing Mode (Click & Drag)' : 'Enable Draw Mode'}
-        </button>
+        <div className={styles.buttonGroup}>
+          <button
+            onClick={handleToggleDrawMode}
+            className={`${styles.button} ${drawMode ? styles.active : ''}`}
+            aria-pressed={drawMode}
+            aria-expanded={drawMode}
+          >
+            {drawMode ? 'Drawing Mode' : 'Enable Draw Mode'}
+          </button>
+
+          <div className={`${styles.methodToggle} ${drawMode ? styles.visible : ''}`}>
+            <button
+              onClick={() => setDrawMethod('drag')}
+              className={`${styles.methodButton} ${drawMethod === 'drag' ? styles.selected : ''}`}
+            >
+              Drag
+            </button>
+            <button
+              onClick={() => setDrawMethod('points')}
+              className={`${styles.methodButton} ${drawMethod === 'points' ? styles.selected : ''}`}
+            >
+              Points
+            </button>
+          </div>
+
+          {drawMode && drawMethod === 'points' && tempPoints.length >= 2 && (
+            <div className={styles.pointsActions}>
+              <button onClick={handleFinishPoints} className={styles.finishButton}>
+                Finish ({tempPoints.length} pts)
+              </button>
+              <button onClick={handleClearPoints} className={styles.clearButton}>
+                Clear
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <MapContainer
@@ -136,23 +262,27 @@ export function MapPane({ onLineDrawn }: MapPaneProps) {
 
         <DrawingLayer
           drawMode={drawMode}
+          drawMethod={drawMethod}
           onLineDrawn={onLineDrawn}
           onDrawStart={handleDrawStart}
           onDrawEnd={handleDrawEnd}
-          setTempLine={setTempLine}
-          setFinalLine={setFinalLine}
+          tempPoints={tempPoints}
+          setTempPoints={setTempPoints}
+          setFinalPoints={setFinalPoints}
         />
 
-        {tempLine && (
+        {/* Temp line while drawing */}
+        {tempPoints.length >= 2 && (
           <Polyline
-            positions={tempLine.map((c) => [c.lat, c.lng] as [number, number])}
+            positions={tempPoints.map((c) => [c.lat, c.lng] as [number, number])}
             pathOptions={{ color: 'red', weight: 3, opacity: 0.7 }}
           />
         )}
 
-        {finalLine && (
+        {/* Final line */}
+        {finalPoints.length >= 2 && tempPoints.length === 0 && (
           <Polyline
-            positions={finalLine.map((c) => [c.lat, c.lng] as [number, number])}
+            positions={finalPoints.map((c) => [c.lat, c.lng] as [number, number])}
             pathOptions={{ color: 'blue', weight: 4 }}
           />
         )}
