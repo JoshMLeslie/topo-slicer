@@ -1,10 +1,18 @@
 import type { Coordinate } from '../types';
 
-// In dev, proxied through Vite to avoid CORS
-// In prod, you'd need your own proxy or a CORS-friendly elevation API
-const OPEN_TOPO_DATA_URL = import.meta.env.DEV
-  ? '/api/elevation'
-  : 'https://api.opentopodata.org/v1/ned10m';
+const OPEN_TOPO_DATA_BASE = 'https://api.opentopodata.org/v1/ned10m';
+
+function buildElevationUrl(locations: string): string {
+  const apiUrl = `${OPEN_TOPO_DATA_BASE}?locations=${locations}`;
+
+  if (import.meta.env.DEV) {
+    // Proxied through Vite dev server
+    return `/api/elevation?locations=${locations}`;
+  }
+
+  // In prod, use corsproxy.io (consider self-hosting for production use)
+  return `https://corsproxy.io/?${encodeURIComponent(apiUrl)}`;
+}
 
 export interface ElevationResult {
   elevation: number | null;
@@ -49,10 +57,9 @@ export async function fetchElevations(
   }
 
   const locations = coords.map((c) => `${c.lat},${c.lng}`).join('|');
+  const url = buildElevationUrl(locations);
 
-  const response = await fetch(`${OPEN_TOPO_DATA_URL}?locations=${locations}`, {
-    signal,
-  });
+  const response = await fetch(url, { signal });
 
   if (!response.ok) {
     throw new ElevationApiError(
