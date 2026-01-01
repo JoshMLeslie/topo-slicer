@@ -6,7 +6,7 @@ import { ElevationProfile } from '../ElevationProfile';
 import styles from './TopoSlicer.module.scss';
 
 export function TopoSlicer() {
-  const { data, loading, progress, error, isRefining, fetchForLine } =
+  const { data, loading, progress, error, isRefining, fetchForLine, reset } =
     useElevationData();
 
   const handleLineDrawn = useCallback(
@@ -19,7 +19,7 @@ export function TopoSlicer() {
   return (
     <div className={styles.container}>
       <div className={styles.mapPane}>
-        <MapPane onLineDrawn={handleLineDrawn} />
+        <MapPane onLineDrawn={handleLineDrawn} onClear={reset} />
       </div>
       <div className={styles.profilePane}>
         <ElevationProfile
