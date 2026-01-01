@@ -123,3 +123,10 @@
     cursor: crosshair;
   }
 }
+
+:global(.leaflet-control-geosearch) {
+	position: absolute !important;
+	bottom: 10px !important;
+	left: 10px !important;
+	width: 30% !important;
+}

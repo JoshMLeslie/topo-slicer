@@ -4,8 +4,12 @@ import {
   TileLayer,
   Polyline,
   CircleMarker,
+  useMap,
   useMapEvents,
 } from 'react-leaflet';
+import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
+import 'leaflet-geosearch/dist/geosearch.css';
+import { SearchControlOptions } from 'leaflet-geosearch/lib/SearchControl.js';
 import type { LeafletMouseEvent } from 'leaflet';
 import type { Coordinate, DrawMethod } from '../../types';
 import { LoadingBar } from '../LoadingBar';
@@ -162,6 +166,33 @@ function DrawingLayer({
   );
 }
 
+function SearchControl() {
+  const map = useMap();
+
+  useEffect(() => {
+    const provider = new OpenStreetMapProvider();
+
+    const searchControl = GeoSearchControl({
+      provider,
+      style: 'bar',
+      showMarker: false,
+      showPopup: false,
+      autoClose: true,
+      retainZoomLevel: false,
+      animateZoom: true,
+      searchLabel: 'Search for a location...',
+    } satisfies SearchControlOptions);
+
+    map.addControl(searchControl);
+
+    return () => {
+      map.removeControl(searchControl);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export function MapPane({ onLineDrawn }: MapPaneProps) {
   const [drawMode, setDrawMode] = useState(false);
   const [drawMethod, setDrawMethod] = useState<DrawMethod>('drag');
@@ -259,6 +290,8 @@ export function MapPane({ onLineDrawn }: MapPaneProps) {
           url="https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png"
           opacity={0.5}
         />
+
+        <SearchControl />
 
         <DrawingLayer
           drawMode={drawMode}
