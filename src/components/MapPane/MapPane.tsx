@@ -1,4 +1,4 @@
-import type { LeafletMouseEvent } from 'leaflet';
+import L, { type LeafletMouseEvent } from 'leaflet';
 import { GeoSearchControl, OpenStreetMapProvider } from 'leaflet-geosearch';
 import 'leaflet-geosearch/dist/geosearch.css';
 import { SearchControlOptions } from 'leaflet-geosearch/lib/SearchControl.js';
@@ -26,6 +26,38 @@ interface SpotElevation {
 }
 
 const MIN_LINE_DISTANCE_METERS = 100;
+
+// X marker for line start
+const startMarkerIcon = L.divIcon({
+	className: 'line-start-marker',
+	html: `<svg width="16" height="16" viewBox="0 0 16 16" style="filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3))">
+		<line x1="3" y1="3" x2="13" y2="13" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/>
+		<line x1="13" y1="3" x2="3" y2="13" stroke="#d32f2f" stroke-width="3" stroke-linecap="round"/>
+	</svg>`,
+	iconSize: [16, 16],
+	iconAnchor: [8, 8],
+});
+
+// Arrow marker creator (rotation applied dynamically)
+function createArrowIcon(rotation: number) {
+	return L.divIcon({
+		className: 'line-end-marker',
+		html: `<svg width="20" height="20" viewBox="0 0 20 20" style="transform: rotate(${rotation}deg); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.3))">
+			<polygon points="10,2 18,18 10,14 2,18" fill="#1976d2" stroke="#0d47a1" stroke-width="1"/>
+		</svg>`,
+		iconSize: [20, 20],
+		iconAnchor: [10, 10],
+	});
+}
+
+// Calculate bearing between two points (in degrees, 0 = north)
+function calculateBearing(from: Coordinate, to: Coordinate): number {
+	const dLng = to.lng - from.lng;
+	const dLat = to.lat - from.lat;
+	// atan2 gives angle from positive x-axis, convert to compass bearing
+	const angle = Math.atan2(dLng, dLat) * (180 / Math.PI);
+	return angle;
+}
 
 function calculatePolylineLength(points: Coordinate[]): number {
 	let total = 0;
@@ -447,12 +479,29 @@ export function MapPane({onLineDrawn, onClear}: MapPaneProps) {
 
 				{/* Final line */}
 				{finalPoints.length >= 2 && tempPoints.length === 0 && (
-					<Polyline
-						positions={finalPoints.map(
-							(c) => [c.lat, c.lng] as [number, number]
-						)}
-						pathOptions={{color: 'blue', weight: 4}}
-					/>
+					<>
+						<Polyline
+							positions={finalPoints.map(
+								(c) => [c.lat, c.lng] as [number, number]
+							)}
+							pathOptions={{color: 'blue', weight: 4}}
+						/>
+						{/* Start marker - X */}
+						<Marker
+							position={[finalPoints[0]!.lat, finalPoints[0]!.lng]}
+							icon={startMarkerIcon}
+						/>
+						{/* End marker - Arrow */}
+						<Marker
+							position={[finalPoints[finalPoints.length - 1]!.lat, finalPoints[finalPoints.length - 1]!.lng]}
+							icon={createArrowIcon(
+								calculateBearing(
+									finalPoints[finalPoints.length - 2]!,
+									finalPoints[finalPoints.length - 1]!
+								)
+							)}
+						/>
+					</>
 				)}
 
 				{/* Spot elevation marker */}
