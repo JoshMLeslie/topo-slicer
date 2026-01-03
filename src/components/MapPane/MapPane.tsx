@@ -13,7 +13,7 @@ import {
 	useMap,
 	useMapEvents,
 } from 'react-leaflet';
-import type { Coordinate, DrawMethod, ElevationPoint } from '../../types';
+import type { Coordinate, DistanceUnit, DrawMethod, ElevationPoint } from '../../types';
 import { fetchElevations } from '../../utils/api';
 import { haversineDistance } from '../../utils/geo';
 import { LoadingBar } from '../LoadingBar';
@@ -73,6 +73,8 @@ interface MapPaneProps {
 	onLineDrawn: (points: Coordinate[]) => void;
 	onClear: () => void;
 	hoveredPoint?: ElevationPoint | null;
+	distanceUnit: DistanceUnit;
+	onDistanceUnitChange: (unit: DistanceUnit) => void;
 }
 
 interface DrawingLayerProps {
@@ -287,7 +289,7 @@ function SearchControl() {
 	return null;
 }
 
-export function MapPane({onLineDrawn, onClear, hoveredPoint}: MapPaneProps) {
+export function MapPane({onLineDrawn, onClear, hoveredPoint, distanceUnit, onDistanceUnitChange}: MapPaneProps) {
 	const [drawMode, setDrawMode] = useState(false);
 	const [drawMethod, setDrawMethod] = useState<DrawMethod>('drag');
 	const [loading, setLoading] = useState(0);
@@ -437,6 +439,21 @@ export function MapPane({onLineDrawn, onClear, hoveredPoint}: MapPaneProps) {
 						</div>
 					)}
 				</div>
+			</div>
+
+			<div className={styles.unitToggle}>
+				<button
+					onClick={() => onDistanceUnitChange('km')}
+					className={`${styles.unitButton} ${distanceUnit === 'km' ? styles.selected : ''}`}
+				>
+					km
+				</button>
+				<button
+					onClick={() => onDistanceUnitChange('mi')}
+					className={`${styles.unitButton} ${distanceUnit === 'mi' ? styles.selected : ''}`}
+				>
+					mi
+				</button>
 			</div>
 
 			<MapContainer

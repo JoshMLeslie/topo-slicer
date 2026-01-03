@@ -17,6 +17,8 @@ export interface LineCoords {
 
 export type DrawMethod = 'drag' | 'points';
 
+export type DistanceUnit = 'km' | 'mi';
+
 export interface ElevationDataState {
   data: ElevationPoint[];
   loading: boolean;

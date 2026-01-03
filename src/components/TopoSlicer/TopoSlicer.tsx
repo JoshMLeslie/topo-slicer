@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import type { Coordinate, ElevationPoint } from '../../types';
+import type { Coordinate, DistanceUnit, ElevationPoint } from '../../types';
 import { useElevationData } from '../../hooks/useElevationData';
 import { MapPane } from '../MapPane';
 import { ElevationProfile } from '../ElevationProfile';
@@ -9,6 +9,7 @@ export function TopoSlicer() {
   const { data, loading, progress, error, isRefining, fetchForLine, reset } =
     useElevationData();
   const [hoveredPoint, setHoveredPoint] = useState<ElevationPoint | null>(null);
+  const [distanceUnit, setDistanceUnit] = useState<DistanceUnit>('km');
 
   const handleLineDrawn = useCallback(
     (points: Coordinate[]) => {
@@ -29,6 +30,8 @@ export function TopoSlicer() {
           onLineDrawn={handleLineDrawn}
           onClear={handleClear}
           hoveredPoint={hoveredPoint}
+          distanceUnit={distanceUnit}
+          onDistanceUnitChange={setDistanceUnit}
         />
       </div>
       <div className={styles.profilePane}>
@@ -39,6 +42,7 @@ export function TopoSlicer() {
           isRefining={isRefining}
           error={error}
           onHoverPoint={setHoveredPoint}
+          distanceUnit={distanceUnit}
         />
       </div>
     </div>
