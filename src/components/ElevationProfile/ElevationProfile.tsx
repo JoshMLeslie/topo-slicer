@@ -18,6 +18,7 @@ interface ElevationProfileProps {
   progress: number;
   isRefining: boolean;
   error: string | null;
+  onHoverPoint?: (point: ElevationPoint | null) => void;
 }
 
 export function ElevationProfile({
@@ -26,6 +27,7 @@ export function ElevationProfile({
   progress,
   isRefining,
   error,
+  onHoverPoint,
 }: ElevationProfileProps) {
   const hasData = data.length > 0;
 
@@ -52,6 +54,12 @@ export function ElevationProfile({
               <LineChart
                 data={data}
                 margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                onMouseMove={(state) => {
+                  if (state?.activePayload?.[0]?.payload) {
+                    onHoverPoint?.(state.activePayload[0].payload as ElevationPoint);
+                  }
+                }}
+                onMouseLeave={() => onHoverPoint?.(null)}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis

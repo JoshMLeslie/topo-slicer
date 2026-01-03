@@ -13,7 +13,7 @@ import {
 	useMap,
 	useMapEvents,
 } from 'react-leaflet';
-import type { Coordinate, DrawMethod } from '../../types';
+import type { Coordinate, DrawMethod, ElevationPoint } from '../../types';
 import { fetchElevations } from '../../utils/api';
 import { haversineDistance } from '../../utils/geo';
 import { LoadingBar } from '../LoadingBar';
@@ -72,6 +72,7 @@ function calculatePolylineLength(points: Coordinate[]): number {
 interface MapPaneProps {
 	onLineDrawn: (points: Coordinate[]) => void;
 	onClear: () => void;
+	hoveredPoint?: ElevationPoint | null;
 }
 
 interface DrawingLayerProps {
@@ -286,7 +287,7 @@ function SearchControl() {
 	return null;
 }
 
-export function MapPane({onLineDrawn, onClear}: MapPaneProps) {
+export function MapPane({onLineDrawn, onClear, hoveredPoint}: MapPaneProps) {
 	const [drawMode, setDrawMode] = useState(false);
 	const [drawMethod, setDrawMethod] = useState<DrawMethod>('drag');
 	const [loading, setLoading] = useState(0);
@@ -502,6 +503,20 @@ export function MapPane({onLineDrawn, onClear}: MapPaneProps) {
 							)}
 						/>
 					</>
+				)}
+
+				{/* Chart hover position marker */}
+				{hoveredPoint && (
+					<CircleMarker
+						center={[hoveredPoint.lat, hoveredPoint.lng]}
+						radius={8}
+						pathOptions={{
+							color: '#10B981',
+							fillColor: '#10B981',
+							fillOpacity: 1,
+							weight: 2,
+						}}
+					/>
 				)}
 
 				{/* Spot elevation marker */}
