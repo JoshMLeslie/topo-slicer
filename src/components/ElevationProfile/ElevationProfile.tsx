@@ -21,6 +21,13 @@ interface ElevationProfileProps {
   onHoverPoint?: (point: ElevationPoint | null) => void;
 }
 
+function formatDistance(meters: number): string {
+  if (meters >= 5000) {
+    return `${(meters / 1000).toFixed(1)} km`;
+  }
+  return `${Math.round(meters)} m`;
+}
+
 export function ElevationProfile({
   data,
   loading: _loading,
@@ -30,6 +37,8 @@ export function ElevationProfile({
   onHoverPoint,
 }: ElevationProfileProps) {
   const hasData = data.length > 0;
+  const maxDistance = hasData ? data[data.length - 1]?.distance ?? 0 : 0;
+  const useKm = maxDistance >= 5000;
 
   return (
     <div className={styles.container}>
@@ -64,8 +73,9 @@ export function ElevationProfile({
                 <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
                 <XAxis
                   dataKey="distance"
+                  tickFormatter={(value: number) => useKm ? `${(value / 1000).toFixed(1)}` : `${Math.round(value)}`}
                   label={{
-                    value: 'Distance (m)',
+                    value: useKm ? 'Distance (km)' : 'Distance (m)',
                     position: 'insideBottom',
                     offset: -10,
                     fill: '#9CA3AF',
@@ -92,7 +102,7 @@ export function ElevationProfile({
                     `${value?.toFixed(1) ?? 'N/A'} m`,
                     'Elevation',
                   ]}
-                  labelFormatter={(label: number) => `Distance: ${label} m`}
+                  labelFormatter={(label: number) => `Distance: ${formatDistance(label)}`}
                 />
                 <Line
                   type="monotone"
