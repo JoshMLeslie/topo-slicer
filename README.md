@@ -1,4 +1,4 @@
-Topographic Line Slicer Web App
+# Topographic Line Slicer Web App
 A two-pane webapp that visualizes topographic / elevation profiles along lines drawn on a map.
 
 Left Pane (Map):
